@@ -93,13 +93,17 @@ export const LogoContainer = styled.a`
   padding: 9px 12px 9px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  &:hover {
+  &:hover,
+  :focus {
     border-color: aquamarine;
+    outline-color: aquamarine;
   }
-  &:hover > span {
+  &:hover > span,
+  :focus > span {
     color: aquamarine;
   }
-  &:hover > * {
+  &:hover > *,
+  :focus > * {
     fill: aquamarine;
   }
 `;
