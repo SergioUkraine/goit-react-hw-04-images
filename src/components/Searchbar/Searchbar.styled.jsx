@@ -83,7 +83,6 @@ export const SearchIcon = styled(ImSearch)`
 
 export const LogoContainer = styled.a`
   position: absolute;
-  z-index: 10;
   right: 3%;
   top: 10%;
   text-align: left;
@@ -91,8 +90,9 @@ export const LogoContainer = styled.a`
   font-size: 14px;
   line-height: 1.2;
   padding: 9px 12px 9px;
-  border: 1px solid #ccc;
+  border: 1px solid #fff;
   border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.3);
   &:hover,
   :focus {
     border-color: aquamarine;
@@ -111,11 +111,11 @@ export const LogoContainer = styled.a`
 export const LogoIcon = styled(logo)`
   width: 70px;
   height: 18px;
-  fill: #333;
+  fill: #fff;
 `;
 
 export const LogoLabel = styled.span`
   font-family: Open Sans, Arial, sans-serif;
   display: block;
-  color: #111;
+  color: #fff;
 `;

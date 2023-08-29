@@ -4,6 +4,8 @@ import { Container } from './App.styled';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
 import Button from './Button';
+import Loader from './Loader';
+import Modal from './Modal';
 
 const NUMBER_PER_PAGE = 12;
 
@@ -14,15 +16,19 @@ class App extends Component {
     isError: null,
     isLoading: null,
     isNewPageExist: null,
+    isModalShow: false,
     searchQuery: null,
     page: null,
+    currentImage: null,
   };
 
   componentDidUpdate(prevProps, prevState) {
     if (
-      prevState.images !== this.state.images ||
-      (prevState.page !== this.state.page && prevState.page !== null)
+      (prevState.images !== this.state.images ||
+        prevState.page !== this.state.page) &&
+      this.state.currentResponse !== null
     ) {
+      console.log('done');
       this.isNewPageExist();
     }
   }
@@ -50,9 +56,12 @@ class App extends Component {
   };
 
   handleSearchClick = queruValue => {
-    this.setState({ page: 1, searchQuery: queruValue }, () => {
-      this.getImages();
-    });
+    this.setState(
+      { page: 1, searchQuery: queruValue, images: null, currentResponse: null },
+      () => {
+        this.getImages();
+      }
+    );
   };
 
   handleMoreButtonClick = () => {
@@ -72,13 +81,42 @@ class App extends Component {
     this.setState({ isNewPageExist: result });
   };
 
+  toggleModal = () => {
+    this.setState(
+      prevState => {
+        return { isModalShow: !prevState.isModalShow };
+      },
+      () => console.log(this.state.isModalShow)
+    );
+  };
+
+  getCurrentImage = image => {
+    this.setState({ currentImage: image }, () => {
+      console.log(this.state.currentImage);
+    });
+  };
+
   render() {
-    const { images, isNewPageExist } = this.state;
+    const { images, isNewPageExist, isLoading, isModalShow } = this.state;
     return (
       <Container>
         <Searchbar onSubmit={this.handleSearchClick} />
-        {images && <ImageGallery images={images} />}
+        {images && (
+          <ImageGallery
+            images={images}
+            showModal={this.toggleModal}
+            getImage={this.getCurrentImage}
+          />
+        )}
         {isNewPageExist && <Button onClick={this.handleMoreButtonClick} />}
+        {isLoading && <Loader />}
+        {isModalShow && (
+          <Modal
+            alt={this.state.currentImage.tags}
+            src={this.state.currentImage.largeImageURL}
+            hideModal={this.toggleModal}
+          />
+        )}
       </Container>
     );
   }
