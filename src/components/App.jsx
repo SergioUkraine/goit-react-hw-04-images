@@ -16,7 +16,6 @@ class App extends Component {
   state = {
     images: null,
     currentResponse: null,
-    isError: null,
     isLoading: null,
     isNewPageExist: null,
     isModalShow: false,
@@ -58,7 +57,6 @@ class App extends Component {
         }
       );
     } catch (error) {
-      this.setState({ isError: true });
       console.log(error);
     }
   };
