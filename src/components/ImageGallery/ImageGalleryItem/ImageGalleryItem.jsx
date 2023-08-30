@@ -1,27 +1,22 @@
-import { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { ListItem, Image } from './ImageGalleryItem.styled';
 
-class ImageGalleryItem extends Component {
-  onImageClick = () => {
-    const { image, showModal, getImage } = this.props;
+function ImageGalleryItem({ image, showModal, getImage }) {
+  const onImageClick = () => {
     getImage(image);
     showModal();
   };
-
-  render() {
-    const { image } = this.props;
-    return (
-      <ListItem>
-        <Image
-          src={image.largeImageURL}
-          alt={image.tags}
-          onClick={this.onImageClick}
-          loading="lazy"
-        />
-      </ListItem>
-    );
-  }
+  return (
+    <ListItem>
+      <Image
+        src={image.largeImageURL}
+        alt={image.tags}
+        onClick={onImageClick}
+        loading="lazy"
+      />
+    </ListItem>
+  );
 }
 
 ImageGalleryItem.propTypes = {

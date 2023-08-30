@@ -17,7 +17,7 @@ const schema = yup.object().shape({
   searchQuery: yup.string().required(),
 });
 
-const Searchbar = ({ onSubmit }) => {
+function Searchbar({ onSubmit }) {
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     await onSubmit(values.searchQuery);
     setSubmitting(false);
@@ -52,7 +52,7 @@ const Searchbar = ({ onSubmit }) => {
       </Formik>
     </Container>
   );
-};
+}
 
 Searchbar.propTypes = {
   onSubmit: PropTypes.func.isRequired,
