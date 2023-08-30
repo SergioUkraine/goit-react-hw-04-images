@@ -11,6 +11,7 @@ import {
   SearchInput,
   SearchIcon,
 } from './Searchbar.styled';
+import PropTypes from 'prop-types';
 
 const schema = yup.object().shape({
   searchQuery: yup.string().required(),
@@ -51,6 +52,10 @@ const Searchbar = ({ onSubmit }) => {
       </Formik>
     </Container>
   );
+};
+
+Searchbar.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
 };
 
 export default Searchbar;

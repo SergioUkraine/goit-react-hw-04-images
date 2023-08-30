@@ -1,16 +1,19 @@
 import React, { Component } from 'react';
 import { Backdrop, ModalContent, ModalImage } from './Modal.styled';
 import { createPortal } from 'react-dom';
+import PropTypes from 'prop-types';
 
 const modalRoot = document.querySelector('#modal-root');
 
-class MaterialModal extends Component {
+class Modal extends Component {
   componentDidMount() {
     window.addEventListener('keydown', this.handleKeyDown);
+    document.documentElement.style.overflowY = 'hidden';
   }
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this.handleKeyDown);
+    document.documentElement.style.overflowY = 'visible';
   }
 
   handleKeyDown = e => {
@@ -29,7 +32,7 @@ class MaterialModal extends Component {
     return createPortal(
       <Backdrop onClick={this.handleBackdropClick}>
         <ModalContent>
-          <ModalImage alt={this.props.alt} src={this.props.src} />
+          <ModalImage src={this.props.src} alt={this.props.alt} />
         </ModalContent>
       </Backdrop>,
       modalRoot
@@ -37,4 +40,10 @@ class MaterialModal extends Component {
   }
 }
 
-export default MaterialModal;
+Modal.propTypes = {
+  hideModal: PropTypes.func.isRequired,
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+};
+
+export default Modal;

@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import * as API from '../services/api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Container } from './App.styled';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
@@ -8,6 +10,7 @@ import Loader from './Loader';
 import Modal from './Modal';
 
 const NUMBER_PER_PAGE = 12;
+const HEADER_FOOTER_GAP = 164;
 
 class App extends Component {
   state = {
@@ -22,13 +25,12 @@ class App extends Component {
     currentImage: null,
   };
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(_, prevState) {
     if (
       (prevState.images !== this.state.images ||
         prevState.page !== this.state.page) &&
       this.state.currentResponse !== null
     ) {
-      console.log('done');
       this.isNewPageExist();
     }
   }
@@ -42,13 +44,19 @@ class App extends Component {
         page,
         NUMBER_PER_PAGE
       );
-      this.setState(prevState => {
-        return {
-          images: [...(prevState.images || []), ...response.hits],
-          currentResponse: response,
-          isLoading: false,
-        };
-      });
+      this.setState(
+        prevState => {
+          return {
+            images: [...(prevState.images || []), ...response.hits],
+            currentResponse: response,
+            isLoading: false,
+          };
+        },
+        () => {
+          this.scrollToNext();
+          this.toastInfo();
+        }
+      );
     } catch (error) {
       this.setState({ isError: true });
       console.log(error);
@@ -75,6 +83,15 @@ class App extends Component {
     );
   };
 
+  scrollToNext = () => {
+    if (this.state.page > 1) {
+      window.scrollTo({
+        top: window.scrollY + (window.innerHeight - HEADER_FOOTER_GAP),
+        behavior: 'smooth',
+      });
+    }
+  };
+
   isNewPageExist = () => {
     const { page, currentResponse } = this.state;
     const result = currentResponse.totalHits - page * NUMBER_PER_PAGE > 0;
@@ -82,18 +99,25 @@ class App extends Component {
   };
 
   toggleModal = () => {
-    this.setState(
-      prevState => {
-        return { isModalShow: !prevState.isModalShow };
-      },
-      () => console.log(this.state.isModalShow)
-    );
+    this.setState(prevState => {
+      return { isModalShow: !prevState.isModalShow };
+    });
   };
 
   getCurrentImage = image => {
-    this.setState({ currentImage: image }, () => {
-      console.log(this.state.currentImage);
-    });
+    this.setState({ currentImage: image });
+  };
+
+  toastInfo = () => {
+    const { page, isNewPageExist } = this.state;
+    const { totalHits } = this.state.currentResponse;
+    if (totalHits !== 0 && page === 1) {
+      toast.success(`Found ${totalHits} images`);
+    } else if (totalHits === 0) {
+      toast.warn('Unfortunately, nothing found');
+    } else if (!isNewPageExist) {
+      toast.success('You`ve already seen all images!');
+    }
   };
 
   render() {
@@ -112,11 +136,13 @@ class App extends Component {
         {isLoading && <Loader />}
         {isModalShow && (
           <Modal
-            alt={this.state.currentImage.tags}
             src={this.state.currentImage.largeImageURL}
+            alt={this.state.currentImage.tags}
             hideModal={this.toggleModal}
           />
         )}
+
+        {!isModalShow && <ToastContainer />}
       </Container>
     );
   }
