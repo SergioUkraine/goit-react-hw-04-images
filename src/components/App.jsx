@@ -15,19 +15,19 @@ const HEADER_FOOTER_GAP = 164;
 class App extends Component {
   state = {
     images: null,
-    currentResponse: null,
     isLoading: null,
     isNewPageExist: null,
     isModalShow: false,
     searchQuery: null,
-    page: null,
+    currentResponse: null,
+    currentPage: null,
     currentImage: null,
   };
 
   componentDidUpdate(_, prevState) {
     if (
       (prevState.images !== this.state.images ||
-        prevState.page !== this.state.page) &&
+        prevState.currentPage !== this.state.currentPage) &&
       this.state.currentResponse !== null
     ) {
       this.isNewPageExist();
@@ -37,10 +37,10 @@ class App extends Component {
   getImages = async () => {
     try {
       this.setState({ isLoading: true, isError: false });
-      const { searchQuery, page } = this.state;
+      const { searchQuery, currentPage } = this.state;
       const response = await API.getMaterials(
         searchQuery,
-        page,
+        currentPage,
         NUMBER_PER_PAGE
       );
       this.setState(
@@ -52,7 +52,7 @@ class App extends Component {
           };
         },
         () => {
-          this.scrollToNext();
+          this.scrollToNextPage();
           this.toastInfo();
         }
       );
@@ -61,9 +61,14 @@ class App extends Component {
     }
   };
 
-  handleSearchClick = queruValue => {
+  handleSearchButtonClick = queruValue => {
     this.setState(
-      { page: 1, searchQuery: queruValue, images: null, currentResponse: null },
+      {
+        currentPage: 1,
+        searchQuery: queruValue,
+        images: null,
+        currentResponse: null,
+      },
       () => {
         this.getImages();
       }
@@ -73,7 +78,7 @@ class App extends Component {
   handleMoreButtonClick = () => {
     this.setState(
       prevState => {
-        return { page: prevState.page + 1 };
+        return { currentPage: prevState.currentPage + 1 };
       },
       () => {
         this.getImages();
@@ -81,8 +86,8 @@ class App extends Component {
     );
   };
 
-  scrollToNext = () => {
-    if (this.state.page > 1) {
+  scrollToNextPage = () => {
+    if (this.state.currentPage > 1) {
       window.scrollTo({
         top: window.scrollY + (window.innerHeight - HEADER_FOOTER_GAP),
         behavior: 'smooth',
@@ -91,8 +96,9 @@ class App extends Component {
   };
 
   isNewPageExist = () => {
-    const { page, currentResponse } = this.state;
-    const result = currentResponse.totalHits - page * NUMBER_PER_PAGE > 0;
+    const { currentPage, currentResponse } = this.state;
+    const result =
+      currentResponse.totalHits - currentPage * NUMBER_PER_PAGE > 0;
     this.setState({ isNewPageExist: result });
   };
 
@@ -107,9 +113,9 @@ class App extends Component {
   };
 
   toastInfo = () => {
-    const { page, isNewPageExist } = this.state;
+    const { currentPage, isNewPageExist } = this.state;
     const { totalHits } = this.state.currentResponse;
-    if (totalHits !== 0 && page === 1) {
+    if (totalHits !== 0 && currentPage === 1) {
       toast.success(`Found ${totalHits} images`);
     } else if (totalHits === 0) {
       toast.warn('Unfortunately, nothing found');
@@ -122,7 +128,7 @@ class App extends Component {
     const { images, isNewPageExist, isLoading, isModalShow } = this.state;
     return (
       <Container>
-        <Searchbar onSubmit={this.handleSearchClick} />
+        <Searchbar onSubmit={this.handleSearchButtonClick} />
         {images && (
           <ImageGallery
             images={images}

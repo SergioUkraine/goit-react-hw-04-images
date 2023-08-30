@@ -7,16 +7,16 @@ const modalRoot = document.querySelector('#modal-root');
 
 class Modal extends Component {
   componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('keydown', this.handleKeyPress);
     document.documentElement.style.overflowY = 'hidden';
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('keydown', this.handleKeyPress);
     document.documentElement.style.overflowY = 'visible';
   }
 
-  handleKeyDown = e => {
+  handleKeyPress = e => {
     if (e.code === 'Escape') {
       this.props.hideModal();
     }
