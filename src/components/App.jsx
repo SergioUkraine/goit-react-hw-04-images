@@ -32,6 +32,12 @@ class App extends Component {
     ) {
       this.isNewPageExist();
     }
+    if (
+      prevState.currentPage !== this.state.currentPage ||
+      prevState.searchQuery !== this.state.searchQuery
+    ) {
+      this.getImages();
+    }
   }
 
   getImages = async () => {
@@ -62,28 +68,18 @@ class App extends Component {
   };
 
   handleSearchButtonClick = queruValue => {
-    this.setState(
-      {
-        currentPage: 1,
-        searchQuery: queruValue,
-        images: null,
-        currentResponse: null,
-      },
-      () => {
-        this.getImages();
-      }
-    );
+    this.setState({
+      currentPage: 1,
+      searchQuery: queruValue,
+      images: null,
+      currentResponse: null,
+    });
   };
 
   handleMoreButtonClick = () => {
-    this.setState(
-      prevState => {
-        return { currentPage: prevState.currentPage + 1 };
-      },
-      () => {
-        this.getImages();
-      }
-    );
+    this.setState(prevState => {
+      return { currentPage: prevState.currentPage + 1 };
+    });
   };
 
   scrollToNextPage = () => {
@@ -136,7 +132,9 @@ class App extends Component {
             getImage={this.getCurrentImage}
           />
         )}
-        {isNewPageExist && <Button onClick={this.handleMoreButtonClick} />}
+        {isNewPageExist && !isLoading && (
+          <Button onClick={this.handleMoreButtonClick} />
+        )}
         {isLoading && <Loader />}
         {isModalShow && (
           <Modal
