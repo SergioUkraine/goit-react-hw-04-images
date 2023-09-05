@@ -1,43 +1,37 @@
-import React, { Component } from 'react';
-import { Backdrop, ModalContent, ModalImage } from './Modal.styled';
+import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Backdrop, ModalContent, ModalImage } from './Modal.styled';
 import PropTypes from 'prop-types';
 
 const modalRoot = document.querySelector('#modal-root');
 
-class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyPress);
+function Modal({ src, alt, hideModal }) {
+  const closeModal = useCallback(
+    ({ code, target, currentTarget }) => {
+      if (code === 'Escape' || target === currentTarget) {
+        hideModal();
+      }
+    },
+    [hideModal]
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', closeModal);
     document.documentElement.style.overflowY = 'hidden';
-  }
+    return () => {
+      window.removeEventListener('keydown', closeModal);
+      document.documentElement.style.overflowY = 'visible';
+    };
+  }, [closeModal]);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyPress);
-    document.documentElement.style.overflowY = 'visible';
-  }
-
-  handleKeyPress = e => {
-    if (e.code === 'Escape') {
-      this.props.hideModal();
-    }
-  };
-
-  handleBackdropClick = e => {
-    if (e.target === e.currentTarget) {
-      this.props.hideModal();
-    }
-  };
-
-  render() {
-    return createPortal(
-      <Backdrop onClick={this.handleBackdropClick}>
-        <ModalContent>
-          <ModalImage src={this.props.src} alt={this.props.alt} />
-        </ModalContent>
-      </Backdrop>,
-      modalRoot
-    );
-  }
+  return createPortal(
+    <Backdrop onClick={closeModal}>
+      <ModalContent>
+        <ModalImage src={src} alt={alt} />
+      </ModalContent>
+    </Backdrop>,
+    modalRoot
+  );
 }
 
 Modal.propTypes = {
