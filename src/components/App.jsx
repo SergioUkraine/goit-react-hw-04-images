@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import * as API from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,78 +12,64 @@ import Modal from './Modal';
 const NUMBER_PER_PAGE = 12;
 const HEADER_FOOTER_GAP = 164;
 
-class App extends Component {
-  state = {
-    images: null,
-    isLoading: null,
-    isNewPageExist: null,
-    isModalShow: false,
-    searchQuery: null,
-    currentResponse: null,
-    currentPage: null,
-    currentImage: null,
-  };
+function App() {
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isNewPageExist, setIsNewPageExist] = useState(false);
+  const [isModalShow, setIsModalShow] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentResponse, setCurrentResponse] = useState('');
+  const [currentPage, setCurrentPage] = useState('');
+  const [currentImage, setCurrentImage] = useState('');
 
-  componentDidUpdate(_, prevState) {
-    if (
-      (prevState.images !== this.state.images ||
-        prevState.currentPage !== this.state.currentPage) &&
-      this.state.currentResponse !== null
-    ) {
-      this.isNewPageExist();
-    }
-    if (
-      prevState.currentPage !== this.state.currentPage ||
-      prevState.searchQuery !== this.state.searchQuery
-    ) {
-      this.getImages();
-    }
-  }
+  useEffect(() => {
+    if (searchQuery === '') return;
+    getImages();
+  }, [searchQuery, currentPage]);
 
-  getImages = async () => {
+  useEffect(() => {
+    if (currentResponse !== null) return;
+    setIsNewPageExist(
+      currentResponse.totalHits - currentPage * NUMBER_PER_PAGE > 0
+    );
+  }, [images, currentPage]);
+
+  const getImages = async () => {
     try {
-      this.setState({ isLoading: true, isError: false });
-      const { searchQuery, currentPage } = this.state;
+      setIsLoading(true);
       const response = await API.getMaterials(
         searchQuery,
         currentPage,
         NUMBER_PER_PAGE
       );
-      this.setState(
-        prevState => {
-          return {
-            images: [...(prevState.images || []), ...response.hits],
-            currentResponse: response,
-            isLoading: false,
-          };
-        },
-        () => {
-          this.scrollToNextPage();
-          this.toastInfo();
-        }
-      );
+      setImages(s => {
+        console.log(s);
+        console.log(response.hits);
+        return [...s, ...response.hits];
+      });
+      await setCurrentResponse(response);
+      scrollToNextPage();
+      toastInfo();
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  handleSearchButtonClick = queruValue => {
-    this.setState({
-      currentPage: 1,
-      searchQuery: queruValue,
-      images: null,
-      currentResponse: null,
-    });
+  const handleSearchButtonClick = queruValue => {
+    setImages([]);
+    setSearchQuery(queruValue);
+    setCurrentResponse('');
+    setCurrentPage(1);
   };
 
-  handleMoreButtonClick = () => {
-    this.setState(prevState => {
-      return { currentPage: prevState.currentPage + 1 };
-    });
+  const handleMoreButtonClick = () => {
+    setCurrentPage(s => s + 1);
   };
 
-  scrollToNextPage = () => {
-    if (this.state.currentPage > 1) {
+  const scrollToNextPage = () => {
+    if (currentPage > 1) {
       window.scrollTo({
         top: window.scrollY + (window.innerHeight - HEADER_FOOTER_GAP),
         behavior: 'smooth',
@@ -91,26 +77,17 @@ class App extends Component {
     }
   };
 
-  isNewPageExist = () => {
-    const { currentPage, currentResponse } = this.state;
-    const result =
-      currentResponse.totalHits - currentPage * NUMBER_PER_PAGE > 0;
-    this.setState({ isNewPageExist: result });
+  const toggleModal = () => {
+    setIsModalShow(s => !s);
   };
 
-  toggleModal = () => {
-    this.setState(prevState => {
-      return { isModalShow: !prevState.isModalShow };
-    });
+  const getCurrentImage = image => {
+    setCurrentImage(image);
   };
 
-  getCurrentImage = image => {
-    this.setState({ currentImage: image });
-  };
-
-  toastInfo = () => {
-    const { currentPage, isNewPageExist } = this.state;
-    const { totalHits } = this.state.currentResponse;
+  const toastInfo = () => {
+    if (currentResponse === null) return;
+    const { totalHits } = currentResponse;
     if (totalHits !== 0 && currentPage === 1) {
       toast.success(`Found ${totalHits} images`);
     } else if (totalHits === 0) {
@@ -120,34 +97,31 @@ class App extends Component {
     }
   };
 
-  render() {
-    const { images, isNewPageExist, isLoading, isModalShow } = this.state;
-    return (
-      <Container>
-        <Searchbar onSubmit={this.handleSearchButtonClick} />
-        {images && (
-          <ImageGallery
-            images={images}
-            showModal={this.toggleModal}
-            getImage={this.getCurrentImage}
-          />
-        )}
-        {isNewPageExist && !isLoading && (
-          <Button onClick={this.handleMoreButtonClick} />
-        )}
-        {isLoading && <Loader />}
-        {isModalShow && (
-          <Modal
-            src={this.state.currentImage.largeImageURL}
-            alt={this.state.currentImage.tags}
-            hideModal={this.toggleModal}
-          />
-        )}
+  return (
+    <Container>
+      <Searchbar onSubmit={handleSearchButtonClick} />
+      {images && (
+        <ImageGallery
+          images={images}
+          showModal={toggleModal}
+          getImage={getCurrentImage}
+        />
+      )}
+      {isNewPageExist && !isLoading && (
+        <Button onClick={handleMoreButtonClick} />
+      )}
+      {isLoading && <Loader />}
+      {isModalShow && (
+        <Modal
+          src={currentImage.largeImageURL}
+          alt={currentImage.tags}
+          hideModal={toggleModal}
+        />
+      )}
 
-        {!isModalShow && <ToastContainer />}
-      </Container>
-    );
-  }
+      {!isModalShow && <ToastContainer />}
+    </Container>
+  );
 }
 
 export default App;
