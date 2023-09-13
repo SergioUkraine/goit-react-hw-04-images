@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 const modalRoot = document.querySelector('#modal-root');
 
 function Modal({ src, alt, hideModal }) {
-  const closeModal = useCallback(
+  const handleCloseModal = useCallback(
     ({ code, target, currentTarget }) => {
       if (code === 'Escape' || target === currentTarget) {
         hideModal();
@@ -16,16 +16,16 @@ function Modal({ src, alt, hideModal }) {
   );
 
   useEffect(() => {
-    window.addEventListener('keydown', closeModal);
+    window.addEventListener('keydown', handleCloseModal);
     document.documentElement.style.overflowY = 'hidden';
     return () => {
-      window.removeEventListener('keydown', closeModal);
+      window.removeEventListener('keydown', handleCloseModal);
       document.documentElement.style.overflowY = 'visible';
     };
-  }, [closeModal]);
+  }, [handleCloseModal]);
 
   return createPortal(
-    <Backdrop onClick={closeModal}>
+    <Backdrop onClick={handleCloseModal}>
       <ModalContent>
         <ModalImage src={src} alt={alt} />
       </ModalContent>

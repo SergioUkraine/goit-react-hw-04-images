@@ -19,7 +19,7 @@ const initState = {
   isModalShow: false,
   isNewPageExist: false,
   currentPage: 1,
-  currentResponse: '',
+  currentResponse: null,
   currentImage: '',
 };
 
@@ -50,7 +50,7 @@ function reducer(state, action) {
     case 'SET_CURRENT_RESPONSE':
       return { ...state, currentResponse: action.payload };
     case 'RESET_CURRENT_RESPONSE': {
-      return { ...state, currentResponse: '' };
+      return { ...state, currentResponse: null };
     }
     case 'SET_CURRENT_IMAGE':
       return { ...state, currentImage: action.payload };
@@ -93,11 +93,10 @@ function App() {
         });
         dispatch({ type: 'ADD_IMAGES', payload: response.hits });
         dispatch({ type: 'SET_CURRENT_RESPONSE', payload: response });
-        dispatch({ type: 'SET_IS_LOADING', payload: false });
       } catch (error) {
         console.log(error);
-        throw new Error(error);
       } finally {
+        dispatch({ type: 'SET_IS_LOADING', payload: false });
       }
     }
     getImages();
@@ -111,7 +110,7 @@ function App() {
   }, [isLoading]);
 
   useEffect(() => {
-    const { total } = currentResponse;
+    const { total } = currentResponse || {};
     if (total && currentPage === 1) {
       toast.success(`Found ${total} images`);
     } else if (total === 0) {
@@ -122,15 +121,63 @@ function App() {
   }, [currentResponse, currentPage, isNewPageExist]);
 
   const handleSearchButtonClick = async queryValue => {
-    dispatch({ type: 'RESET_IMAGES' });
-    dispatch({ type: 'RESET_CURRENT_RESPONSE' });
-    await dispatch({ type: 'RESET_SEARCH_QUERY' });
-    dispatch({ type: 'RESET_PAGE' });
-    dispatch({ type: 'SET_SEARCH_QUERY', payload: queryValue });
+    try {
+      dispatch({ type: 'RESET_IMAGES' });
+    } catch (error) {
+      console.error('Error with dispatch for RESET_IMAGES:', error);
+    }
+    try {
+      dispatch({ type: 'RESET_CURRENT_RESPONSE' });
+    } catch (error) {
+      console.error('Error with dispatch for RESET_CURRENT_RESPONSE:', error);
+    }
+    try {
+      await dispatch({ type: 'RESET_SEARCH_QUERY' });
+    } catch (error) {
+      console.error('Error with dispatch for RESET_SEARCH_QUERY:', error);
+    }
+    try {
+      dispatch({ type: 'RESET_PAGE' });
+    } catch (error) {
+      console.error('Error with dispatch for RESET_PAGE:', error);
+    }
+    try {
+      dispatch({ type: 'SET_SEARCH_QUERY', payload: queryValue });
+    } catch (error) {
+      console.error('Error with dispatch for SET_SEARCH_QUERY:', error);
+    }
   };
 
   const handleMoreButtonClick = () => {
-    dispatch({ type: 'INCREMENT_PAGE', payload: 1 });
+    try {
+      dispatch({ type: 'INCREMENT_PAGE', payload: 1 });
+    } catch (error) {
+      console.error('Error with dispatch for INCREMENT_PAGE:', error);
+    }
+  };
+
+  const showModal = () => {
+    try {
+      dispatch({ type: 'SET_IS_MODAL_SHOW', payload: true });
+    } catch (error) {
+      console.error('Error with dispatch for SET_IS_MODAL_SHOW:', error);
+    }
+  };
+
+  const hideModal = () => {
+    try {
+      dispatch({ type: 'SET_IS_MODAL_SHOW', payload: false });
+    } catch (error) {
+      console.error('Error with dispatch for SET_IS_MODAL_SHOW:', error);
+    }
+  };
+
+  const getShownImage = image => {
+    try {
+      dispatch({ type: 'SET_CURRENT_IMAGE', payload: image });
+    } catch (error) {
+      console.error('Error with dispatch for SET_CURRENT_IMAGE:', error);
+    }
   };
 
   return (
@@ -140,12 +187,8 @@ function App() {
       {images && (
         <ImageGallery
           images={images}
-          showModal={() => {
-            dispatch({ type: 'SET_IS_MODAL_SHOW', payload: true });
-          }}
-          getImage={image =>
-            dispatch({ type: 'SET_CURRENT_IMAGE', payload: image })
-          }
+          showModal={showModal}
+          getShownImage={getShownImage}
           perPage={NUMBER_PER_PAGE}
           ref={lastImageRef}
         />
@@ -155,15 +198,13 @@ function App() {
       ) : (
         <ButtonSkeleton />
       )}
-      {isModalShow && (
+      {isModalShow ? (
         <Modal
           src={currentImage.largeImageURL}
           alt={currentImage.tags}
-          hideModal={() => {
-            dispatch({ type: 'SET_IS_MODAL_SHOW', payload: false });
-          }}
+          hideModal={hideModal}
         />
-      )}
+      ) : null}
       {!isModalShow && <ToastContainer />}
     </Container>
   );
