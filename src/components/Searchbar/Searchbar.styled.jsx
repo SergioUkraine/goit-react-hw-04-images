@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
 import { Form, Field } from 'formik';
-import { ImSearch } from 'react-icons/im';
+import { GrSearch } from 'react-icons/gr';
+import { GrClose } from 'react-icons/gr';
 import { ReactComponent as logo } from '../../images/logo.svg';
 
 export const Container = styled.header`
@@ -32,8 +33,12 @@ export const SearchForm = styled(Form)`
   overflow: hidden;
 `;
 
-export const SearchButton = styled.button`
-  display: inline-block;
+export const Button = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
   width: 48px;
   height: 48px;
   border: 0;
@@ -44,9 +49,20 @@ export const SearchButton = styled.button`
   &:hover {
     opacity: 1;
   }
-  /* margin-right: 8px; // Добавили отступ справа */
-  background-color: transparent; // Добавили фон в режиме прозрачности
-  border: none; // Убрали рамку
+  background-color: transparent;
+  border: none;
+`;
+
+export const SearchIcon = styled(GrSearch)`
+  width: 24px;
+  height: 24px;
+  display: block;
+`;
+
+export const DeleteIcon = styled(GrClose)`
+  width: 20px;
+  height: 20px;
+  display: block;
 `;
 
 export const ButtonLabel = styled.span`
@@ -66,6 +82,7 @@ export const SearchInput = styled(Field)`
   width: 100%;
   font: inherit;
   font-size: 20px;
+  line-height: 1.25;
   border: none;
   outline: none;
   padding-left: 4px;
@@ -74,11 +91,6 @@ export const SearchInput = styled(Field)`
     font: inherit;
     font-size: 18px;
   }
-`;
-
-export const SearchIcon = styled(ImSearch)`
-  width: 24px;
-  height: 24px;
 `;
 
 export const LogoContainer = styled.a`

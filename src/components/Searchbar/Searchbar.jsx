@@ -2,14 +2,15 @@ import * as yup from 'yup';
 import { Formik } from 'formik';
 import {
   Container,
+  SearchForm,
+  Button,
+  SearchIcon,
+  DeleteIcon,
+  ButtonLabel,
+  SearchInput,
   LogoContainer,
   LogoIcon,
   LogoLabel,
-  SearchForm,
-  SearchButton,
-  ButtonLabel,
-  SearchInput,
-  SearchIcon,
 } from './Searchbar.styled';
 import PropTypes from 'prop-types';
 
@@ -18,11 +19,11 @@ const schema = yup.object().shape({
 });
 
 function Searchbar({ onSubmit }) {
-  const handleSubmit = async (values, { resetForm, setSubmitting }) => {
+  const handleSubmit = async (values, { setSubmitting }) => {
     await onSubmit(values.searchQuery);
     setSubmitting(false);
-    resetForm();
   };
+
   return (
     <Container>
       <LogoContainer href="https://pixabay.com">
@@ -34,12 +35,12 @@ function Searchbar({ onSubmit }) {
         validationSchema={schema}
         onSubmit={handleSubmit}
       >
-        {({ isSubmitting }) => (
+        {({ values, isSubmitting }) => (
           <SearchForm>
-            <SearchButton type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting}>
               <SearchIcon />
               <ButtonLabel>Search</ButtonLabel>
-            </SearchButton>
+            </Button>
             <SearchInput
               name="searchQuery"
               type="text"
@@ -47,6 +48,15 @@ function Searchbar({ onSubmit }) {
               autoFocus
               placeholder="Search images and photos"
             ></SearchInput>
+
+            {values.searchQuery ? (
+              <Button type="reset" disabled={isSubmitting}>
+                <DeleteIcon />
+                <ButtonLabel>Delete</ButtonLabel>
+              </Button>
+            ) : (
+              <Button type="button" />
+            )}
           </SearchForm>
         )}
       </Formik>

@@ -1,124 +1,109 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as API from '../services/api';
+import { Container, ButtonSkeleton } from './App.styled';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Container } from './App.styled';
 import Searchbar from './Searchbar';
-import ImageGallery from './ImageGallery';
 import Button from './Button';
 import Loader from './Loader';
+import ImageGallery from './ImageGallery';
 import Modal from './Modal';
 
 const NUMBER_PER_PAGE = 12;
-const HEADER_FOOTER_GAP = 164;
+const HEADER_GAP = 88;
 
 function App() {
   const [images, setImages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isNewPageExist, setIsNewPageExist] = useState(false);
-  const [isModalShow, setIsModalShow] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalShow, setIsModalShow] = useState(false);
+  const [isNewPageExist, setIsNewPageExist] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [currentResponse, setCurrentResponse] = useState('');
-  const [currentPage, setCurrentPage] = useState('');
   const [currentImage, setCurrentImage] = useState('');
+  const lastImageRef = useRef(null);
 
   useEffect(() => {
     if (searchQuery === '') return;
+    async function getImages() {
+      try {
+        setIsLoading(true);
+        const response = await API.getResponse(
+          searchQuery,
+          currentPage,
+          NUMBER_PER_PAGE
+        );
+        setIsNewPageExist(
+          response.totalHits - currentPage * NUMBER_PER_PAGE > 0
+        );
+        setImages(s => {
+          return [...s, ...response.hits];
+        });
+        setCurrentResponse(response);
+      } catch (error) {
+        console.log(error);
+        throw new Error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
     getImages();
   }, [searchQuery, currentPage]);
 
   useEffect(() => {
-    if (currentResponse !== null) return;
-    setIsNewPageExist(
-      currentResponse.totalHits - currentPage * NUMBER_PER_PAGE > 0
-    );
-  }, [images, currentPage]);
+    if (isLoading === true || !lastImageRef.current) return;
+    const elementPosition = lastImageRef.current.getBoundingClientRect().top;
+    const deltaY = elementPosition - HEADER_GAP;
+    window.scrollBy({ top: deltaY, behavior: 'smooth' });
+  }, [isLoading]);
 
-  const getImages = async () => {
-    try {
-      setIsLoading(true);
-      const response = await API.getMaterials(
-        searchQuery,
-        currentPage,
-        NUMBER_PER_PAGE
-      );
-      setImages(s => {
-        console.log(s);
-        console.log(response.hits);
-        return [...s, ...response.hits];
-      });
-      await setCurrentResponse(response);
-      scrollToNextPage();
-      toastInfo();
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    const { total } = currentResponse;
+    if (total && currentPage === 1) {
+      toast.success(`Found ${total} images`);
+    } else if (total === 0) {
+      toast.warn('Unfortunately, nothing found');
+    } else if (total && !isNewPageExist) {
+      toast.success('You`ve already seen all images!');
     }
-  };
+  }, [currentResponse, currentPage, isNewPageExist]);
 
-  const handleSearchButtonClick = queruValue => {
+  const handleSearchButtonClick = async queryValue => {
     setImages([]);
-    setSearchQuery(queruValue);
-    setCurrentResponse('');
+    await setSearchQuery(''); //для того щоб зображення оновлювались навіть при повторному запиті
     setCurrentPage(1);
+    setSearchQuery(queryValue);
   };
 
   const handleMoreButtonClick = () => {
     setCurrentPage(s => s + 1);
   };
 
-  const scrollToNextPage = () => {
-    if (currentPage > 1) {
-      window.scrollTo({
-        top: window.scrollY + (window.innerHeight - HEADER_FOOTER_GAP),
-        behavior: 'smooth',
-      });
-    }
-  };
-
-  const toggleModal = () => {
-    setIsModalShow(s => !s);
-  };
-
-  const getCurrentImage = image => {
-    setCurrentImage(image);
-  };
-
-  const toastInfo = () => {
-    if (currentResponse === null) return;
-    const { totalHits } = currentResponse;
-    if (totalHits !== 0 && currentPage === 1) {
-      toast.success(`Found ${totalHits} images`);
-    } else if (totalHits === 0) {
-      toast.warn('Unfortunately, nothing found');
-    } else if (!isNewPageExist) {
-      toast.success('You`ve already seen all images!');
-    }
-  };
-
   return (
     <Container>
       <Searchbar onSubmit={handleSearchButtonClick} />
+      {isLoading ? <Loader /> : null}
       {images && (
         <ImageGallery
           images={images}
-          showModal={toggleModal}
-          getImage={getCurrentImage}
+          showModal={() => setIsModalShow(s => !s)}
+          getImage={image => setCurrentImage(image)}
+          perPage={NUMBER_PER_PAGE}
+          ref={lastImageRef}
         />
       )}
-      {isNewPageExist && !isLoading && (
+      {isNewPageExist && !isLoading ? (
         <Button onClick={handleMoreButtonClick} />
+      ) : (
+        <ButtonSkeleton />
       )}
-      {isLoading && <Loader />}
       {isModalShow && (
         <Modal
           src={currentImage.largeImageURL}
           alt={currentImage.tags}
-          hideModal={toggleModal}
+          hideModal={() => setIsModalShow(s => !s)}
         />
       )}
-
       {!isModalShow && <ToastContainer />}
     </Container>
   );

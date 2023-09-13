@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import { ListItem, Image } from './ImageGalleryItem.styled';
 
-function ImageGalleryItem({ image, showModal, getImage }) {
+const ImageGalleryItem = forwardRef(({ image, showModal, getImage }, ref) => {
   const onImageClick = () => {
     getImage(image);
     showModal();
@@ -10,6 +10,7 @@ function ImageGalleryItem({ image, showModal, getImage }) {
   return (
     <ListItem>
       <Image
+        ref={ref}
         src={image.largeImageURL}
         alt={image.tags}
         onClick={onImageClick}
@@ -17,7 +18,7 @@ function ImageGalleryItem({ image, showModal, getImage }) {
       />
     </ListItem>
   );
-}
+});
 
 ImageGalleryItem.propTypes = {
   image: PropTypes.shape({
