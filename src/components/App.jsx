@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useReducer } from 'react';
 import * as API from '../services/api';
 import { Container, ButtonSkeleton } from './App.styled';
 import { ToastContainer, toast } from 'react-toastify';
@@ -12,39 +12,92 @@ import Modal from './Modal';
 const NUMBER_PER_PAGE = 12;
 const HEADER_GAP = 88;
 
+const initState = {
+  images: [],
+  searchQuery: '',
+  isLoading: false,
+  isModalShow: false,
+  isNewPageExist: false,
+  currentPage: 1,
+  currentResponse: '',
+  currentImage: '',
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'RESET_IMAGES':
+      return { ...state, images: [] };
+    case 'ADD_IMAGES':
+      return { ...state, images: [...state.images, ...action.payload] };
+
+    case 'SET_SEARCH_QUERY':
+      return { ...state, searchQuery: action.payload };
+    case 'RESET_SEARCH_QUERY':
+      return { ...state, searchQuery: '' };
+
+    case 'SET_IS_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'SET_IS_MODAL_SHOW':
+      return { ...state, isModalShow: action.payload };
+    case 'SET_IS_NEW_PAGE_EXIST':
+      return { ...state, isNewPageExist: action.payload };
+
+    case 'INCREMENT_PAGE':
+      return { ...state, currentPage: state.currentPage + action.payload };
+    case 'RESET_PAGE':
+      return { ...state, currentPage: 1 };
+
+    case 'SET_CURRENT_RESPONSE':
+      return { ...state, currentResponse: action.payload };
+    case 'RESET_CURRENT_RESPONSE': {
+      return { ...state, currentResponse: '' };
+    }
+    case 'SET_CURRENT_IMAGE':
+      return { ...state, currentImage: action.payload };
+
+    default:
+      throw new Error(`Action ${action.type} is unsupported`);
+  }
+}
+
 function App() {
-  const [images, setImages] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModalShow, setIsModalShow] = useState(false);
-  const [isNewPageExist, setIsNewPageExist] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentResponse, setCurrentResponse] = useState('');
-  const [currentImage, setCurrentImage] = useState('');
+  const [state, dispatch] = useReducer(reducer, initState);
+
+  const {
+    images,
+    isNewPageExist,
+    isLoading,
+    isModalShow,
+    currentPage,
+    currentResponse,
+    currentImage,
+    searchQuery,
+  } = state;
+
   const lastImageRef = useRef(null);
 
   useEffect(() => {
     if (searchQuery === '') return;
     async function getImages() {
       try {
-        setIsLoading(true);
+        dispatch({ type: 'SET_IS_LOADING', payload: true });
         const response = await API.getResponse(
           searchQuery,
           currentPage,
           NUMBER_PER_PAGE
         );
-        setIsNewPageExist(
-          response.totalHits - currentPage * NUMBER_PER_PAGE > 0
-        );
-        setImages(s => {
-          return [...s, ...response.hits];
+
+        dispatch({
+          type: 'SET_IS_NEW_PAGE_EXIST',
+          payload: response.totalHits - currentPage * NUMBER_PER_PAGE > 0,
         });
-        setCurrentResponse(response);
+        dispatch({ type: 'ADD_IMAGES', payload: response.hits });
+        dispatch({ type: 'SET_CURRENT_RESPONSE', payload: response });
+        dispatch({ type: 'SET_IS_LOADING', payload: false });
       } catch (error) {
         console.log(error);
         throw new Error(error);
       } finally {
-        setIsLoading(false);
       }
     }
     getImages();
@@ -69,14 +122,15 @@ function App() {
   }, [currentResponse, currentPage, isNewPageExist]);
 
   const handleSearchButtonClick = async queryValue => {
-    setImages([]);
-    await setSearchQuery(''); //для того щоб зображення оновлювались навіть при повторному запиті
-    setCurrentPage(1);
-    setSearchQuery(queryValue);
+    dispatch({ type: 'RESET_IMAGES' });
+    dispatch({ type: 'RESET_CURRENT_RESPONSE' });
+    await dispatch({ type: 'RESET_SEARCH_QUERY' });
+    dispatch({ type: 'RESET_PAGE' });
+    dispatch({ type: 'SET_SEARCH_QUERY', payload: queryValue });
   };
 
   const handleMoreButtonClick = () => {
-    setCurrentPage(s => s + 1);
+    dispatch({ type: 'INCREMENT_PAGE', payload: 1 });
   };
 
   return (
@@ -86,8 +140,12 @@ function App() {
       {images && (
         <ImageGallery
           images={images}
-          showModal={() => setIsModalShow(s => !s)}
-          getImage={image => setCurrentImage(image)}
+          showModal={() => {
+            dispatch({ type: 'SET_IS_MODAL_SHOW', payload: true });
+          }}
+          getImage={image =>
+            dispatch({ type: 'SET_CURRENT_IMAGE', payload: image })
+          }
           perPage={NUMBER_PER_PAGE}
           ref={lastImageRef}
         />
@@ -101,7 +159,9 @@ function App() {
         <Modal
           src={currentImage.largeImageURL}
           alt={currentImage.tags}
-          hideModal={() => setIsModalShow(s => !s)}
+          hideModal={() => {
+            dispatch({ type: 'SET_IS_MODAL_SHOW', payload: false });
+          }}
         />
       )}
       {!isModalShow && <ToastContainer />}
