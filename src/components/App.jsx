@@ -121,63 +121,27 @@ function App() {
   }, [currentResponse, currentPage, isNewPageExist]);
 
   const handleSearchButtonClick = async queryValue => {
-    try {
-      dispatch({ type: 'RESET_IMAGES' });
-    } catch (error) {
-      console.error('Error with dispatch for RESET_IMAGES:', error);
-    }
-    try {
-      dispatch({ type: 'RESET_CURRENT_RESPONSE' });
-    } catch (error) {
-      console.error('Error with dispatch for RESET_CURRENT_RESPONSE:', error);
-    }
-    try {
-      await dispatch({ type: 'RESET_SEARCH_QUERY' });
-    } catch (error) {
-      console.error('Error with dispatch for RESET_SEARCH_QUERY:', error);
-    }
-    try {
-      dispatch({ type: 'RESET_PAGE' });
-    } catch (error) {
-      console.error('Error with dispatch for RESET_PAGE:', error);
-    }
-    try {
-      dispatch({ type: 'SET_SEARCH_QUERY', payload: queryValue });
-    } catch (error) {
-      console.error('Error with dispatch for SET_SEARCH_QUERY:', error);
-    }
+    dispatch({ type: 'RESET_IMAGES' });
+    dispatch({ type: 'RESET_CURRENT_RESPONSE' });
+    await dispatch({ type: 'RESET_SEARCH_QUERY' });
+    dispatch({ type: 'RESET_PAGE' });
+    dispatch({ type: 'SET_SEARCH_QUERY', payload: queryValue });
   };
 
   const handleMoreButtonClick = () => {
-    try {
-      dispatch({ type: 'INCREMENT_PAGE', payload: 1 });
-    } catch (error) {
-      console.error('Error with dispatch for INCREMENT_PAGE:', error);
-    }
+    dispatch({ type: 'INCREMENT_PAGE', payload: 1 });
   };
 
   const showModal = () => {
-    try {
-      dispatch({ type: 'SET_IS_MODAL_SHOW', payload: true });
-    } catch (error) {
-      console.error('Error with dispatch for SET_IS_MODAL_SHOW:', error);
-    }
+    dispatch({ type: 'SET_IS_MODAL_SHOW', payload: true });
   };
 
   const hideModal = () => {
-    try {
-      dispatch({ type: 'SET_IS_MODAL_SHOW', payload: false });
-    } catch (error) {
-      console.error('Error with dispatch for SET_IS_MODAL_SHOW:', error);
-    }
+    dispatch({ type: 'SET_IS_MODAL_SHOW', payload: false });
   };
 
   const getShownImage = image => {
-    try {
-      dispatch({ type: 'SET_CURRENT_IMAGE', payload: image });
-    } catch (error) {
-      console.error('Error with dispatch for SET_CURRENT_IMAGE:', error);
-    }
+    dispatch({ type: 'SET_CURRENT_IMAGE', payload: image });
   };
 
   return (
